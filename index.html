@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Rendimiento Inglés</title>
+    
+    <!-- Cargar Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Cargar React y ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Cargar Babel para compilar JSX en el navegador -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Animaciones personalizadas -->
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Contenedor principal donde React montará la aplicación -->
+    <div id="root"></div>
+
+    <!-- Script de la aplicación en React -->
+    <script type="text/babel">
+        const { useState, useMemo, useEffect, useRef } = React;
+
+        // --- ICONOS (SVG) ---
+        const IconSearch = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+        const IconUsers = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+        const IconTrendingUp = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>;
+        const IconCheckCircle = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+        const IconAlertTriangle = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
+        const IconBookOpen = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+        const IconTarget = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
+        const IconChevronDown = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>;
+        const IconUser = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+        const IconBarChart2 = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>;
+        const IconSparkles = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>;
+        const IconTrophy = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
+        const IconMedal = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/><path d="M11 12 5.12 2.2"/><path d="M13 12l5.88-9.8"/><path d="M8 7h8"/><circle cx="12" cy="17" r="5"/><path d="M12 18v-2h-.5"/></svg>;
+        const IconCalculator = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>;
+        const IconMail = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>;
+        const IconBrainCircuit = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.002 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M19.967 17.484A4 4 0 0 1 18 18"/></svg>;
+        const IconClipboard = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>;
+        const IconX = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+
+        // --- DATASET ---
+        const studentData = [
+          { id: 1, name: "Castellano Pertuz Sofia Alejandra", disciplina: 4.50, quiz: 4.10, intermedio: 2.70, final: 2.00, u0: 5.00, u1: 4.00, u2: 4.60, cuaderno: 4.70, promedio: 3.64 },
+          { id: 2, name: "Castillo Bastidas Eduard Andres", disciplina: 5.00, quiz: 2.70, intermedio: 2.20, final: 2.20, u0: 5.00, u1: 4.50, u2: 4.50, cuaderno: 4.40, promedio: 3.50 },
+          { id: 3, name: "Delgado Paz Fayrud", disciplina: 4.00, quiz: 3.50, intermedio: 2.30, final: 2.00, u0: 5.00, u1: 3.40, u2: 3.70, cuaderno: 3.50, promedio: 3.15 },
+          { id: 4, name: "Diaz Lanao Maria Jose", disciplina: 5.00, quiz: 4.10, intermedio: 4.30, final: 3.80, u0: 5.00, u1: 3.50, u2: 4.20, cuaderno: 2.00, promedio: 3.91 },
+          { id: 5, name: "Fernandez Fernandez Jesualdo", disciplina: 4.50, quiz: 4.10, intermedio: 2.60, final: 2.80, u0: 3.70, u1: 4.00, u2: 3.80, cuaderno: 2.00, promedio: 3.21 },
+          { id: 6, name: "Fonseca Viadero Cristian Camilo", disciplina: 3.70, quiz: 2.70, intermedio: 3.70, final: 3.00, u0: 5.00, u1: 3.80, u2: 4.00, cuaderno: 3.50, promedio: 3.60 },
+          { id: 7, name: "Gonzalez Avila Jheremy Siad", disciplina: 4.70, quiz: 4.10, intermedio: 2.30, final: 3.80, u0: 5.00, u1: 3.00, u2: 2.00, cuaderno: 4.60, promedio: 3.60 },
+          { id: 8, name: "Gonzalez Diaz Dainer Santiago", disciplina: 4.00, quiz: 3.70, intermedio: 2.30, final: 4.80, u0: 5.00, u1: 3.00, u2: 3.65, cuaderno: 2.00, promedio: 3.48 },
+          { id: 9, name: "Martinez Pana Angel Luis", disciplina: 4.20, quiz: 3.20, intermedio: 3.00, final: 2.00, u0: 5.00, u1: 2.20, u2: 2.00, cuaderno: 4.20, promedio: 3.12 },
+          { id: 10, name: "Medina Martinez Vania Sofia", disciplina: 4.50, quiz: 3.70, intermedio: 4.30, final: 2.30, u0: 5.00, u1: 3.20, u2: 4.00, cuaderno: 4.40, promedio: 3.82 },
+          { id: 11, name: "Meriño Amaris Danna Isabella", disciplina: 5.00, quiz: 3.70, intermedio: 2.00, final: 3.00, u0: 5.00, u1: 2.30, u2: 2.00, cuaderno: 4.40, promedio: 3.29 },
+          { id: 12, name: "Mondragon Barraza Alena Isabel", disciplina: 5.00, quiz: 3.80, intermedio: 3.00, final: 3.80, u0: 5.00, u1: 3.70, u2: 4.45, cuaderno: 4.00, promedio: 3.95 },
+          { id: 13, name: "Morales Campo Ledneyder", disciplina: 3.70, quiz: 2.00, intermedio: 3.70, final: 2.00, u0: 5.00, u1: 2.50, u2: 4.00, cuaderno: 2.00, promedio: 3.01 },
+          { id: 14, name: "Mozo Altamar Richar De Jesus", disciplina: 4.80, quiz: 3.70, intermedio: 3.70, final: 2.00, u0: 5.00, u1: 4.30, u2: 4.30, cuaderno: 4.80, promedio: 3.85 },
+          { id: 15, name: "Narvaez Montoya Martha Lucia", disciplina: 4.80, quiz: 3.70, intermedio: 4.00, final: 3.80, u0: 5.00, u1: 4.20, u2: 3.50, cuaderno: 4.40, promedio: 4.13 },
+          { id: 16, name: "Ojeda Ramirez Juldannes Shale", disciplina: 4.80, quiz: 4.10, intermedio: 2.50, final: 4.80, u0: 5.00, u1: 4.80, u2: 4.80, cuaderno: 4.70, promedio: 4.28 },
+          { id: 17, name: "Pinto Figueroa Valeria", disciplina: 3.00, quiz: 4.00, intermedio: 5.00, final: 2.00, u0: 4.00, u1: 2.20, u2: 2.00, cuaderno: 4.30, promedio: 3.40 },
+          { id: 18, name: "Pinto Sequea Ghersel David", disciplina: 3.60, quiz: 4.10, intermedio: 4.00, final: 2.00, u0: 5.00, u1: 2.50, u2: 4.70, cuaderno: 3.80, promedio: 3.56 },
+          { id: 19, name: "Piña Reyes Sebastian José", disciplina: 4.00, quiz: 5.00, intermedio: 2.00, final: 5.00, u0: 5.00, u1: 3.20, u2: 4.40, cuaderno: 4.20, promedio: 3.97 },
+          { id: 20, name: "Polanco Salgado Domini Estiven", disciplina: 4.80, quiz: 5.00, intermedio: 4.30, final: 3.80, u0: 5.00, u1: 3.80, u2: 4.50, cuaderno: 4.70, promedio: 4.41 },
+          { id: 21, name: "Rahman Gutierrez Abdel Hamid", disciplina: 4.80, quiz: 5.00, intermedio: 5.00, final: 2.50, u0: 5.00, u1: 4.80, u2: 4.50, cuaderno: 4.00, promedio: 4.28 },
+          { id: 22, name: "Restrepo Jimenez Andrea Carolina", disciplina: 4.30, quiz: 4.50, intermedio: 3.30, final: 2.80, u0: 5.00, u1: 2.00, u2: 4.00, cuaderno: 2.00, promedio: 3.33 },
+          { id: 23, name: "Rico Fontalvo Salome Anahi", disciplina: 4.50, quiz: 4.00, intermedio: 2.00, final: 2.00, u0: 5.00, u1: 3.50, u2: 4.20, cuaderno: 4.20, promedio: 3.34 },
+          { id: 24, name: "Romero Sanchez Kiara Valentina", disciplina: 4.20, quiz: 4.60, intermedio: 2.30, final: 3.00, u0: 5.00, u1: 2.20, u2: 3.70, cuaderno: 2.00, promedio: 3.16 },
+          { id: 25, name: "Sardot Rodriguez Isaac Daniel", disciplina: 3.50, quiz: 4.10, intermedio: 4.30, final: 3.33, u0: 5.00, u1: 3.00, u2: 4.40, cuaderno: 3.20, promedio: 3.81 },
+          { id: 26, name: "Sierra Palmar Juan Lucas", disciplina: 4.50, quiz: 4.10, intermedio: 2.30, final: 4.00, u0: 5.00, u1: 4.80, u2: 4.00, cuaderno: 4.20, promedio: 3.91 },
+          { id: 27, name: "Solano Pedrozo Anhelys Sofia", disciplina: 5.00, quiz: 2.70, intermedio: 2.00, final: 2.80, u0: 5.00, u1: 3.00, u2: 4.50, cuaderno: 3.10, promedio: 3.26 },
+          { id: 28, name: "Vergel Lopez Jesus Armando", disciplina: 4.50, quiz: 2.30, intermedio: 3.70, final: 2.80, u0: 5.00, u1: 2.20, u2: 2.00, cuaderno: 3.00, promedio: 3.21 }
+        ];
+
+        const App = () => {
+          const [selectedStudentId, setSelectedStudentId] = useState('');
+          const [searchTerm, setSearchTerm] = useState('');
+          const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+          const [isModalOpen, setIsModalOpen] = useState(false);
+          // NUEVO ESTADO: Para controlar el popup de la lista de estudiantes
+          const [isListModalOpen, setIsListModalOpen] = useState(false);
+          const searchRef = useRef(null);
+          
+          // Estados para las funcionalidades de IA (Individual)
+          const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+          const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
+          const [isGeneratingObs, setIsGeneratingObs] = useState(false);
+          const [aiPlan, setAiPlan] = useState('');
+          const [aiEmail, setAiEmail] = useState('');
+          const [aiObs, setAiObs] = useState('');
+          const [planError, setPlanError] = useState('');
+          
+          // Estados para funcionalidad de IA (Global)
+          const [isGeneratingGlobal, setIsGeneratingGlobal] = useState(false);
+          const [aiGlobalAnalysis, setAiGlobalAnalysis] = useState('');
+          const [globalError, setGlobalError] = useState('');
+
+          // Limpiar el estado de IA individual cuando cambia el estudiante
+          useEffect(() => {
+            setAiPlan('');
+            setAiEmail('');
+            setAiObs('');
+            setPlanError('');
+          }, [selectedStudentId]);
+
+          // Manejar clics fuera de la barra de búsqueda para cerrar la lista
+          useEffect(() => {
+            const handleClickOutside = (event) => {
+              if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+              }
+            };
+            document.addEventListener("mousedown", handleClickOutside);
+            return () => document.removeEventListener("mousedown", handleClickOutside);
+          }, []);
+
+          // Bloquear el scroll del fondo cuando ALGUN modal está abierto
+          useEffect(() => {
+            if (isModalOpen || isListModalOpen) {
+              document.body.style.overflow = 'hidden';
+            } else {
+              document.body.style.overflow = 'unset';
+            }
+          }, [isModalOpen, isListModalOpen]);
+
+          const classAverages = useMemo(() => {
+            const total = studentData.length;
+            const sum = (key) => studentData.reduce((acc, curr) => acc + curr[key], 0);
+            
+            const avgDisciplina = sum('disciplina') / total;
+            const avgQuiz = sum('quiz') / total;
+            const avgIntermedio = sum('intermedio') / total;
+            const avgFinal = sum('final') / total;
+            const avgExamenes = (avgIntermedio + avgFinal) / 2;
+            const avgUnits = (sum('u0') + sum('u1') + sum('u2')) / (total * 3);
+            const avgCuaderno = sum('cuaderno') / total;
+            
+            return {
+              disciplina: avgDisciplina.toFixed(1),
+              quiz: avgQuiz.toFixed(1),
+              examenes: avgExamenes.toFixed(1),
+              units: avgUnits.toFixed(1),
+              cuaderno: avgCuaderno.toFixed(1),
+              intermedio: avgIntermedio.toFixed(1),
+              final: avgFinal.toFixed(1)
+            };
+          }, []);
+
+          // NUEVO: Estado para detectar si es dispositivo móvil
+          const [isMobileView, setIsMobileView] = useState(false);
+
+          useEffect(() => {
+            const handleResize = () => {
+              // 768px es el punto de quiebre estándar para tablets y móviles
+              setIsMobileView(window.innerWidth < 768);
+            };
+            
+            handleResize(); // Comprobación inicial al cargar
+            window.addEventListener('resize', handleResize);
+            return () => window.removeEventListener('resize', handleResize);
+          }, []);
+
+          const topStudents = [...studentData].sort((a, b) => b.promedio - a.promedio).slice(0, 4);
+          const bottomStudents = [...studentData].sort((a, b) => a.promedio - b.promedio).slice(0, 4);
+          const selectedStudent = studentData.find(s => s.id === parseInt(selectedStudentId));
+          
+          // NUEVO: Lista de todos los estudiantes ordenada alfabéticamente
+          const sortedAllStudents = useMemo(() => {
+            return [...studentData].sort((a, b) => a.name.localeCompare(b.name));
+          }, []);
+
+          // Filtrar estudiantes en vivo mientras el usuario escribe
+          const filteredStudents = studentData.filter(s => 
+            s.name.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+
+          const selectStudentAndOpenModal = (id, name) => {
+             setSelectedStudentId(id);
+             setSearchTerm(name);
+             setIsDropdownOpen(false);
+             setIsModalOpen(true);
+          };
+
+          // NUEVA FUNCIÓN: Maneja el cierre del modal y limpia la barra de búsqueda
+          const handleCloseModal = () => {
+             setIsModalOpen(false);
+             setSearchTerm(''); // Borra el nombre escrito en el buscador
+             setSelectedStudentId(''); // Limpia la selección interna
+          };
+
+          const fetchWithBackoff = async (url, options, retries = 5) => {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < retries; i++) {
+              try {
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+              } catch (error) {
+                if (i === retries - 1) throw error;
+                await new Promise(resolve => setTimeout(resolve, delays[i]));
+              }
+            }
+          };
+
+          // --- FUNCIONES DE LLAMADA A LA API DE GEMINI ---
+          
+          const callGeminiAPI = async (prompt) => {
+            // El entorno inyectará la clave aquí si está vacío. 
+            const apiKey = ""; 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const data = await fetchWithBackoff(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!text) throw new Error("Respuesta inválida o vacía de Gemini.");
+            return text;
+          };
+
+          // 1. Generar Plan de Acción (Individual)
+          const handleGenerateAIPlan = async () => {
+            if (!selectedStudent) return;
+            setIsGeneratingPlan(true);
+            setAiEmail(''); setAiObs('');
+            setPlanError('');
+
+            const prompt = `Eres un asesor pedagógico experto. Analiza el rendimiento en la clase de Inglés del estudiante ${selectedStudent.name}. 
+            Notas actuales (escala 0.0 a 5.0): 
+            - Disciplina: ${selectedStudent.disciplina}
+            - Quices: ${selectedStudent.quiz}
+            - Examen Intermedio: ${selectedStudent.intermedio}
+            - Examen Final: ${selectedStudent.final}
+            - Promedio Unidades: ${((selectedStudent.u0 + selectedStudent.u1 + selectedStudent.u2) / 3).toFixed(1)}
+            - Cuaderno: ${selectedStudent.cuaderno}
+            - PROMEDIO FINAL: ${selectedStudent.promedio.toFixed(2)}.
+            Escribe un Plan de Acción dirigido al profesor. Proporciona 3 pasos claros para ayudar al estudiante. Usa un tono empático. Formatea con viñetas.`;
+
+            try {
+              const text = await callGeminiAPI(prompt);
+              setAiPlan(text);
+            } catch (err) {
+              setPlanError("No pudimos conectar con la IA. Revisa tu conexión o tu API Key.");
+            } finally {
+              setIsGeneratingPlan(false);
+            }
+          };
+
+          // 2. Generar Correo para Padres (Individual)
+          const handleGenerateParentEmail = async () => {
+            if (!selectedStudent) return;
+            setIsGeneratingEmail(true);
+            setAiPlan(''); setAiObs('');
+            setPlanError('');
+
+            const prompt = `Eres un profesor de inglés en el Liceo del Caribe. Redacta un correo electrónico (email) breve, cordial y constructivo dirigido a los padres o acudientes del estudiante ${selectedStudent.name}.
+            Resumen de sus notas:
+            - Disciplina y Comportamiento: ${selectedStudent.disciplina}/5.0
+            - Rendimiento en Exámenes: ${((selectedStudent.intermedio + selectedStudent.final)/2).toFixed(1)}/5.0
+            - Promedio Final Acumulado: ${selectedStudent.promedio.toFixed(2)}/5.0
+            Menciona sus fortalezas y en qué área debe mejorar. Da una o dos sugerencias prácticas de cómo pueden apoyarlo desde casa. Tono muy profesional y motivador. No agregues un asunto al texto.`;
+
+            try {
+              const text = await callGeminiAPI(prompt);
+              setAiEmail(text);
+            } catch (err) {
+              setPlanError("No pudimos generar el correo con la IA. Inténtalo más tarde.");
+            } finally {
+              setIsGeneratingEmail(false);
+            }
+          };
+          
+          // 3. Generar Nota para el Observador Estudiantil
+          const handleGenerateObservation = async () => {
+             if (!selectedStudent) return;
+             setIsGeneratingObs(true);
+             setAiPlan(''); setAiEmail('');
+             setPlanError('');
+             
+             const prompt = `Eres un docente redactando una anotación formal para el libro del observador del estudiante ${selectedStudent.name}.
+             Su promedio final es de ${selectedStudent.promedio.toFixed(2)} sobre 5.0. 
+             Si su promedio es Básico o Bajo (menor a 4.0), redacta una observación sobre las deficiencias y la necesidad de compromiso académico.
+             Si su promedio es Alto o Superior (4.0 o más), redacta una anotación de felicitación destacando su excelente desempeño.
+             REGLA OBLIGATORIA: La nota DEBE ser muy corta, de MÁXIMO 50 palabras. Ve directo al grano. Tono institucional.`;
+             
+             try {
+                const text = await callGeminiAPI(prompt);
+                setAiObs(text);
+             } catch (err) {
+                setPlanError("No pudimos generar la observación. Inténtalo de nuevo.");
+             } finally {
+                setIsGeneratingObs(false);
+             }
+          };
+
+          // 4. Generar Análisis Global del Grupo
+          const handleGenerateGlobalAnalysis = async () => {
+            setIsGeneratingGlobal(true);
+            setGlobalError('');
+
+            const prompt = `Eres un coordinador académico estratégico. Analiza los promedios globales del grupo 9-1 en la clase de Inglés.
+            Promedios de la clase (Escala 0 a 5):
+            - Comportamiento y Disciplina: ${classAverages.disciplina}
+            - Quices Cortos: ${classAverages.quiz}
+            - Examen Intermedio: ${classAverages.intermedio}
+            - Examen Final: ${classAverages.final}
+            - Tareas del Libro: ${classAverages.units}
+            - Revisión de Cuadernos: ${classAverages.cuaderno}
+            
+            Escribe un "Diagnóstico General del Grupo" dirigido al profesor de la asignatura. Identifica el patrón principal de la clase (qué hacen bien y en qué fallan masivamente). Luego, redacta 3 recomendaciones de metodologías o dinámicas para aplicar el próximo periodo. Sé muy práctico y directo.`;
+
+            try {
+              const text = await callGeminiAPI(prompt);
+              setAiGlobalAnalysis(text);
+            } catch (err) {
+              setGlobalError("No pudimos generar el análisis global. Verifica tu conexión.");
+            } finally {
+              setIsGeneratingGlobal(false);
+            }
+          };
+
+
+          const SectionHeader = ({ number, title, colorClass = "bg-red-700", textClass = "text-gray-800" }) => (
+            <div className="flex items-center gap-2 mb-4 border-b border-gray-200 pb-2">
+              <div className={`${colorClass} text-white w-6 h-6 rounded-sm flex items-center justify-center font-bold text-sm shrink-0 shadow-sm`}>
+                {number}
+              </div>
+              <h2 className={`text-lg font-bold ${textClass} uppercase tracking-wide flex items-center gap-2`}>
+                {title}
+              </h2>
+            </div>
+          );
+
+          // Asignación de Color Semántico basado en el rendimiento
+          const getColorByValue = (val) => {
+             if (val >= 4.6) return '#22c55e'; // Verde (Superior)
+             if (val >= 4.0) return '#3b82f6'; // Azul (Alto)
+             if (val >= 3.0) return '#f59e0b'; // Amarillo Oscuro / Naranja (Básico)
+             return '#ef4444'; // Rojo (Bajo)
+          };
+
+          const chartData = [
+            { label: 'Disciplina (10%)', value: parseFloat(classAverages.disciplina) },
+            { label: 'Quiz (9%)', value: parseFloat(classAverages.quiz) },
+            { label: 'Exámenes (40%)', value: parseFloat(classAverages.examenes) },
+            { label: 'Unidades (27%)', value: parseFloat(classAverages.units) },
+            { label: 'Cuaderno (14%)', value: parseFloat(classAverages.cuaderno) }
+          ];
+
+          const getClassification = (val) => {
+            if (val >= 4.6) return "Superior";
+            if (val >= 4.0 && val <= 4.5) return "Alto";
+            if (val >= 3.0 && val < 4.0) return "Básico";
+            return "Bajo"; 
+          };
+
+          // --- CONFIGURACIÓN GRÁFICO VERTICAL (ESCRITORIO) ---
+          const svgWidth = 800;
+          const svgHeight = 350;
+          const padLeft = 50;
+          const padRight = 50;
+          const padTop = 70;
+          const padBottom = 60;
+          const cWidth = svgWidth - padLeft - padRight;
+          const cHeight = svgHeight - padTop - padBottom;
+          const maxV = 5.0;
+
+          const points = chartData.map((d, i) => {
+            const x = padLeft + (i + 0.5) * (cWidth / chartData.length);
+            const y = padTop + cHeight - (d.value / maxV) * cHeight;
+            const barColor = getColorByValue(d.value);
+            return { ...d, x, y, color: barColor };
+          });
+          
+          const polylinePoints = points.map(p => `${p.x},${p.y}`).join(' ');
+          
+          // --- CONFIGURACIÓN GRÁFICO HORIZONTAL (MÓVIL) ---
+          const hSvgWidth = 600;
+          const hSvgHeight = 450;
+          const hPadLeft = 130; // Más espacio para los textos del eje Y
+          const hPadRight = 100; // Espacio a la derecha para etiquetas de valores
+          const hPadTop = 40;
+          const hPadBottom = 40;
+          const hCWidth = hSvgWidth - hPadLeft - hPadRight;
+          const hCHeight = hSvgHeight - hPadTop - hPadBottom;
+
+          const hPoints = chartData.map((d, i) => {
+            const y = hPadTop + (i + 0.5) * (hCHeight / chartData.length);
+            const barWidth = (d.value / maxV) * hCWidth;
+            const x = hPadLeft + barWidth;
+            const barColor = getColorByValue(d.value);
+            return { ...d, x, y, barWidth, color: barColor };
+          });
+          
+          const hPolylinePoints = hPoints.map(p => `${p.x},${p.y}`).join(' ');
+
+          const combinedExamAvg = ((parseFloat(classAverages.quiz) + parseFloat(classAverages.intermedio) + parseFloat(classAverages.final)) / 3).toFixed(2);
+
+          return (
+            <div className="min-h-screen bg-gray-50 text-gray-800 font-sans p-4 md:p-8">
+              {/* HEADER PRINCIPAL Y BARRA DE BÚSQUEDA GLOBÁL */}
+              <div className="max-w-6xl mx-auto bg-white rounded-t-xl shadow-lg border-t-8 border-red-700 mb-6 relative">
+                <div className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-red-50 to-white rounded-t-lg">
+                  
+                  {/* Título e Icono */}
+                  <div className="flex items-center gap-4 md:gap-6 flex-1 w-full">
+                    <div className="w-16 h-20 md:w-20 md:h-24 flex items-center justify-center shrink-0">
+                      <svg viewBox="0 0 24 24" fill="none" className="w-full h-full drop-shadow-md">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="#fef2f2" stroke="#b91c1c" strokeWidth="1.5" strokeLinejoin="round"/>
+                        <path d="M12 7.5L6.5 10L12 12.5L17.5 10L12 7.5Z" fill="#b91c1c"/>
+                        <path d="M8.5 10.8V14C8.5 15.2 10 16.5 12 16.5C14 16.5 15.5 15.2 15.5 14V10.8" fill="none" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
+                        <line x1="17.5" y1="10" x2="17.5" y2="14" stroke="#b91c1c" strokeWidth="1.5" strokeLinecap="round"/>
+                        <circle cx="17.5" cy="14.5" r="1" fill="#b91c1c" />
+                      </svg>
+                    </div>
+
+                    <div>
+                      <h1 className="text-2xl md:text-3xl font-extrabold text-red-800 uppercase tracking-tight">Reporte de Rendimiento Académico</h1>
+                      <p className="text-lg text-gray-700 font-medium mt-1">INGLÉS 9° - 1 | PRIMER PERIODO ESCOLAR</p>
+                      <p className="text-sm text-gray-500 mt-1">Liceo del Caribe - Maicao, La Guajira</p>
+                    </div>
+                  </div>
+
+                  {/* BARRA DE BÚSQUEDA GLOBAL RESPONSIVE */}
+                  <div className="w-full md:w-auto md:min-w-[320px] relative z-50 shrink-0" ref={searchRef}>
+                    <div className="relative group">
+                      <input 
+                        type="text"
+                        className="w-full bg-white border-2 border-gray-300 text-gray-700 py-3 px-5 pr-12 rounded-full leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 shadow-sm font-medium transition-all"
+                        placeholder="Buscar estudiante..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setIsDropdownOpen(true);
+                          if (e.target.value === '') {
+                            setSelectedStudentId('');
+                          }
+                        }}
+                        onClick={() => setIsDropdownOpen(true)}
+                      />
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-5 text-gray-400 group-focus-within:text-red-500 transition-colors">
+                        <IconSearch size={22} />
+                      </div>
+                    </div>
+
+                    {/* Menú desplegable de resultados */}
+                    {isDropdownOpen && (
+                      <div className="absolute right-0 z-[100] w-full md:w-[400px] mt-2 bg-white border border-gray-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto animate-fade-in">
+                        {filteredStudents.length > 0 ? (
+                          filteredStudents.map(s => (
+                            <div 
+                              key={s.id} 
+                              className="px-5 py-3 hover:bg-red-50 cursor-pointer border-b border-gray-100 last:border-0 flex justify-between items-center transition-colors"
+                              onClick={() => {
+                                selectStudentAndOpenModal(s.id, s.name);
+                              }}
+                            >
+                              <span className="font-medium text-gray-800 text-sm">{s.name}</span>
+                              <span className={`text-xs font-bold px-2 py-1 rounded-full ${s.promedio >= 4 ? 'bg-green-100 text-green-700' : s.promedio >= 3 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
+                                {s.promedio.toFixed(2)}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-5 py-6 text-center text-gray-500 text-sm">
+                            <IconSearch size={32} className="mx-auto mb-2 opacity-30"/>
+                            No se encontraron coincidencias.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="max-w-6xl mx-auto space-y-6">
+                
+                {/* SECCIÓN 1: KPIs */}
+                <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                  <SectionHeader number="1" title="Métricas Clave (KPIs)" colorClass="bg-teal-700" textClass="text-teal-900" />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    {/* MODIFICADO: Tarjeta "Total Estudiantes" convertida en botón interactivo */}
+                    <div 
+                      onClick={() => setIsListModalOpen(true)}
+                      className="bg-gray-50 rounded-lg p-4 flex items-center border border-gray-200 cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all shadow-sm hover:shadow-md active:scale-95 group"
+                      title="Ver lista completa de estudiantes"
+                    >
+                      <div className="bg-blue-100 p-3 rounded-full mr-4 text-blue-700 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <IconUsers size={24} />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 font-semibold uppercase group-hover:text-blue-800 transition-colors flex items-center gap-1">
+                          Total Estudiantes <IconChevronDown size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </p>
+                        <p className="text-3xl font-bold text-gray-800 group-hover:text-blue-900 transition-colors">28</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-4 flex items-center border border-gray-100">
+                      <div className="bg-green-100 p-3 rounded-full mr-4 text-green-700"><IconTrendingUp size={24} /></div>
+                      <div>
+                        <p className="text-sm text-gray-500 font-semibold uppercase">Promedio Grupal Estimado</p>
+                        <p className="text-3xl font-bold text-gray-800">~3.58</p>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4 flex items-center border border-gray-100">
+                      <div className="bg-yellow-100 p-3 rounded-full mr-4 text-yellow-700"><IconCheckCircle size={24} /></div>
+                      <div>
+                        <p className="text-sm text-gray-500 font-semibold uppercase">Tasa de Aprobación General</p>
+                        <p className="text-3xl font-bold text-gray-800">100%</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* SECCIONES 2, 3 Y 4: GRÁFICO Y TABLAS */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  
+                  {/* GRÁFICO GENERAL (CON COLORES SEMÁNTICOS) */}
+                  <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2 overflow-hidden">
+                    <SectionHeader number="2" title="Balance de Promedios por Criterio" colorClass="bg-blue-700" textClass="text-blue-900" />
+                    
+                    {/* Leyenda de colores */}
+                    <div className="flex gap-4 mb-2 justify-center text-xs font-medium text-gray-600">
+                       <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500"></span> Superior (≥4.6)</span>
+                       <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-500"></span> Alto (≥4.0)</span>
+                       <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-500"></span> Básico (≥3.0)</span>
+                       <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-500"></span> Bajo (&#60;3.0)</span>
+                    </div>
+
+                    <div className="w-full overflow-x-auto mt-2">
+                      {isMobileView ? (
+                        /* --- GRÁFICO HORIZONTAL PARA MÓVILES --- */
+                        <svg viewBox={`0 0 ${hSvgWidth} ${hSvgHeight}`} className="w-full h-auto min-w-[320px] font-sans">
+                          {/* Grid Vertical (Fondo) */}
+                          {[0, 1, 2, 3, 4, 5].map(val => {
+                            const x = hPadLeft + (val / maxV) * hCWidth;
+                            return (
+                              <g key={`hgrid-${val}`}>
+                                <text x={x} y={hPadTop - 10} textAnchor="middle" fontSize="12" fill="#6b7280">{val}.0</text>
+                                <line x1={x} y1={hPadTop} x2={x} y2={hSvgHeight - hPadBottom} stroke="#e5e7eb" strokeWidth="1" strokeDasharray={val === 0 ? "" : "4 4"} />
+                                <text x={x} y={hSvgHeight - hPadBottom + 20} textAnchor="middle" fontSize="12" fill="#6b7280">{val}.0</text>
+                              </g>
+                            );
+                          })}
+
+                          {/* Barras Horizontales */}
+                          {hPoints.map((p, i) => {
+                            const barH = 34; // Grosor de la barra
+                            const cl = getClassification(p.value);
+                            
+                            return (
+                              <g key={`hbar-${i}`} className="group cursor-pointer">
+                                {/* Textos Eje Y (Categorías) */}
+                                <text x={hPadLeft - 10} y={p.y - 2} textAnchor="end" dominantBaseline="middle" fontSize="12" fontWeight="600" fill="#4b5563">
+                                  {p.label.split(' ')[0]}
+                                </text>
+                                <text x={hPadLeft - 10} y={p.y + 12} textAnchor="end" dominantBaseline="middle" fontSize="10" fill="#9ca3af">
+                                  {p.label.split(' ')[1]}
+                                </text>
+
+                                {/* Barra */}
+                                <rect x={hPadLeft} y={p.y - barH / 2} width={p.barWidth} height={barH} fill={p.color} rx="4" ry="4" className="opacity-90 transition-all duration-300" />
+                                
+                                {/* Etiqueta de Valor */}
+                                <text x={p.x + 12} y={p.y + 1} textAnchor="start" dominantBaseline="middle" fontSize="14" fontWeight="bold" fill={p.color}>
+                                  {p.value.toFixed(1)}
+                                </text>
+                                
+                                {/* Etiqueta de Clasificación (Globo) */}
+                                <rect x={p.x + 45} y={p.y - 10} width={cl === 'Superior' ? 54 : 44} height={20} rx="10" fill={p.color} className="opacity-90" />
+                                <text x={p.x + (cl === 'Superior' ? 72 : 67)} y={p.y + 1} textAnchor="middle" dominantBaseline="middle" fontSize="9" fontWeight="bold" fill="#ffffff" letterSpacing="0.5">
+                                  {cl}
+                                </text>
+                              </g>
+                            );
+                          })}
+
+                          {/* Línea de tendencia conectiva */}
+                          <polyline points={hPolylinePoints} fill="none" stroke="#1f2937" strokeWidth="2" strokeDasharray="5 5" />
+                          {hPoints.map((p, i) => <circle key={`hpt-${i}`} cx={p.x} cy={p.y} r="5" fill="#ffffff" stroke="#1f2937" strokeWidth="2" />)}
+                        </svg>
+                      ) : (
+                        /* --- GRÁFICO VERTICAL PARA ESCRITORIO (Original) --- */
+                        <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-auto min-w-[600px] font-sans">
+                          {[0, 1, 2, 3, 4, 5].map(val => {
+                            const y = padTop + cHeight - (val / maxV) * cHeight;
+                            return (
+                              <g key={`grid-${val}`}>
+                                <text x={padLeft - 10} y={y + 4} textAnchor="end" fontSize="12" fill="#6b7280">{val}.0</text>
+                                <line x1={padLeft} y1={y} x2={svgWidth - padRight} y2={y} stroke="#e5e7eb" strokeWidth="1" strokeDasharray={val === 0 ? "" : "4 4"} />
+                              </g>
+                            );
+                          })}
+
+                          {points.map((p, i) => {
+                            const barW = 50;
+                            const barH = cHeight - (p.y - padTop);
+                            const cl = getClassification(p.value);
+                            const bgWidth = cl === 'Superior' ? 60 : (cl === 'Básico' ? 50 : (cl === 'Alto' ? 40 : 40));
+                            
+                            return (
+                              <g key={`bar-${i}`} className="group cursor-pointer">
+                                <rect x={p.x - barW / 2} y={p.y} width={barW} height={barH} fill={p.color} rx="4" ry="4" className="opacity-90 transition-all duration-300" />
+                                <text x={p.x} y={p.y - 12} textAnchor="middle" fontSize="14" fontWeight="bold" fill={p.color}>{p.value.toFixed(1)}</text>
+                                <rect x={p.x - bgWidth / 2} y={p.y - 42} width={bgWidth} height={18} rx="9" fill={p.color} className="opacity-90" />
+                                <text x={p.x} y={p.y - 29} textAnchor="middle" fontSize="10" fontWeight="bold" fill="#ffffff">{cl}</text>
+                                <text x={p.x} y={svgHeight - 40} textAnchor="middle" fontSize="12" fontWeight="600" fill="#4b5563">{p.label.split(' ')[0]}</text>
+                                <text x={p.x} y={svgHeight - 24} textAnchor="middle" fontSize="11" fill="#6b7280">{p.label.split(' ')[1]}</text>
+                                {p.label.includes("Exámenes") && p.value < 3.0 && (
+                                  <text x={p.x} y={svgHeight - 8} textAnchor="middle" fontSize="10" fontWeight="bold" fill="#ef4444">Deficiencia Crítica</text>
+                                )}
+                              </g>
+                            );
+                          })}
+
+                          <polyline points={polylinePoints} fill="none" stroke="#1f2937" strokeWidth="3" strokeDasharray="6 4" />
+                          {points.map((p, i) => <circle key={`pt-${i}`} cx={p.x} cy={p.y} r="5" fill="#ffffff" stroke="#1f2937" strokeWidth="2" />)}
+                        </svg>
+                      )}
+                    </div>
+                  </section>
+
+                  {/* TABLAS DE HONOR Y ALERTA (AHORA CON CLICK PARA SELECCIONAR) */}
+                  <div className="flex flex-col gap-6">
+                    <section className="bg-yellow-50 p-6 rounded-xl shadow-sm border border-yellow-200 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                        <IconTrophy size={80} className="text-yellow-800" />
+                      </div>
+                      <SectionHeader number="3" title={<><IconTrophy size={20}/> Cuadro de Honor</>} colorClass="bg-yellow-600" textClass="text-yellow-900" />
+                      <div className="overflow-x-auto relative z-10 w-full pb-1">
+                        <table className="w-full text-sm mt-2">
+                          <thead>
+                            <tr className="border-b-2 border-yellow-300">
+                              <th className="text-left p-2 font-bold text-yellow-900">N°</th>
+                              <th className="text-left p-2 font-bold text-yellow-900">ESTUDIANTE</th>
+                              <th className="text-right p-2 font-bold text-yellow-900">PROM</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {topStudents.map((s, i) => {
+                              const medalColors = ['text-yellow-500', 'text-gray-400', 'text-amber-700', 'text-blue-400'];
+                              return (
+                              <tr 
+                                key={s.id} 
+                                onClick={() => selectStudentAndOpenModal(s.id, s.name)}
+                                className="border-b border-yellow-200 last:border-0 hover:bg-yellow-200 cursor-pointer transition-colors"
+                                title="Haz clic para ver detalles"
+                              >
+                                <td className="py-3 px-2 text-yellow-800 font-bold flex items-center gap-1">
+                                  {i + 1}. <IconMedal size={16} className={medalColors[i] || 'text-transparent'}/>
+                                </td>
+                                <td className="py-3 px-2 font-semibold text-yellow-950 leading-tight">{s.name.split(' ').slice(0, 3).join(' ')}</td>
+                                <td className="py-3 px-2 text-right font-black text-yellow-700">{s.promedio.toFixed(2)}</td>
+                              </tr>
+                            )})}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="text-[10px] text-yellow-700 text-center mt-2 opacity-70">Haz clic en un estudiante para ver el análisis individual.</p>
+                    </section>
+
+                    <section className="bg-red-50 p-6 rounded-xl shadow-sm border border-red-200 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                        <IconAlertTriangle size={80} className="text-red-900" />
+                      </div>
+                      <SectionHeader number="4" title={<><IconAlertTriangle size={20}/> Alerta Temprana</>} colorClass="bg-red-700" textClass="text-red-900" />
+                      <div className="overflow-x-auto relative z-10 w-full pb-1">
+                        <table className="w-full text-sm mt-2">
+                          <thead>
+                            <tr className="border-b-2 border-red-300">
+                              <th className="text-left p-2 font-bold text-red-900">ESTUDIANTE</th>
+                              <th className="text-right p-2 font-bold text-red-900">PROM</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {bottomStudents.map(s => (
+                              <tr 
+                                key={s.id} 
+                                onClick={() => selectStudentAndOpenModal(s.id, s.name)}
+                                className="border-b border-red-200 last:border-0 hover:bg-red-200 cursor-pointer transition-colors"
+                                title="Haz clic para ver detalles"
+                              >
+                                <td className="py-3 px-2 font-semibold text-red-950 flex items-center gap-2 leading-tight">
+                                  <IconAlertTriangle size={14} className="text-red-500 shrink-0"/> {s.name.split(' ').slice(0, 3).join(' ')}
+                                </td>
+                                <td className="py-3 px-2 text-right font-black text-red-700">{s.promedio.toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="text-[10px] text-red-700 text-center mt-2 opacity-70">Haz clic en un estudiante para generar planes de mejora.</p>
+                    </section>
+                  </div>
+                </div>
+
+                {/* SECCIONES INFERIORES */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <SectionHeader number="5" title="Enfoque en Actividades (Units)" colorClass="bg-orange-600" textClass="text-orange-900"/>
+                    <div className="flex items-center gap-4 mt-4">
+                      <div className="w-24 h-24 rounded-full border-8 border-orange-400 flex items-center justify-center shrink-0">
+                        <span className="text-xl font-bold text-gray-700">27%</span>
+                      </div>
+                      <p className="text-sm text-gray-600 flex-1">
+                        Las Unidades 0, 1, 2 se basan en actividades del libro. La <strong>Unidad 0</strong> tiene el mayor promedio y sirve como un "colchón" de apoyo. <br/><br/>
+                        <span className="text-xs text-gray-400 uppercase tracking-wide font-bold">Peso total del criterio: 27%</span>
+                      </p>
+                    </div>
+                  </section>
+
+                  <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <SectionHeader number="6" title="Insights Clave" colorClass="bg-indigo-700" textClass="text-indigo-900"/>
+                    <ul className="space-y-4 text-sm mt-4">
+                      <li className="flex gap-3 items-start"><IconCheckCircle size={18} className="text-green-500 mt-0.5 shrink-0" /> <p><strong>EXCELENCIA EN DISCIPLINA:</strong> La base conductual es positiva.</p></li>
+                      <li className="flex gap-3 items-start"><IconAlertTriangle size={18} className="text-red-500 mt-0.5 shrink-0" /> <p><strong>EXÁMENES COMO FILTRO CRÍTICO:</strong> Rendimiento bajo generalizado.</p></li>
+                      <li className="flex gap-3 items-start"><IconBookOpen size={18} className="text-yellow-500 mt-0.5 shrink-0" /> <p><strong>INCONSISTENCIA EN CUADERNOS:</strong> Hábitos de organización deficientes.</p></li>
+                      <li className="flex gap-3 items-start"><IconTarget size={18} className="text-blue-500 mt-0.5 shrink-0" /> <p><strong>RIESGO DE DEPENDENCIA:</strong> Varios alumnos dependen de notas base.</p></li>
+                    </ul>
+                  </section>
+                </div>
+
+                <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                      <SectionHeader number="7" title="Análisis de Alertas Tempranas" colorClass="bg-rose-700" textClass="text-rose-900"/>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                        <div className="bg-red-50 p-3 rounded border border-red-200 text-sm">
+                          <p className="font-bold text-red-900 border-b border-red-200 pb-1 mb-2 flex items-center gap-1"><IconAlertTriangle size={14}/> Morales Campo</p>
+                          <ul className="list-disc pl-4 text-red-800 text-xs space-y-1">
+                            <li>Deficiencia Generalizada.</li>
+                            <li>Notas críticas en Final (2.0), Quiz y Cuaderno.</li>
+                          </ul>
+                        </div>
+                        <div className="bg-orange-50 p-3 rounded border border-orange-200 text-sm">
+                          <p className="font-bold text-orange-900 border-b border-orange-200 pb-1 mb-2 flex items-center gap-1"><IconAlertTriangle size={14}/> Martinez Pana</p>
+                          <ul className="list-disc pl-4 text-orange-800 text-xs space-y-1">
+                            <li>Inconsistencia en Unidades (1 y 2) y Examen Final.</li>
+                          </ul>
+                        </div>
+                        <div className="bg-yellow-50 p-3 rounded border border-yellow-200 text-sm">
+                          <p className="font-bold text-yellow-900 border-b border-yellow-200 pb-1 mb-2 flex items-center gap-1"><IconAlertTriangle size={14}/> Delgado Paz</p>
+                          <ul className="list-disc pl-4 text-yellow-800 text-xs space-y-1">
+                            <li>Deficiencia Crítica en Exámenes.</li>
+                            <li>Notas base sólidas.</li>
+                          </ul>
+                        </div>
+                        <div className="bg-rose-50 p-3 rounded border border-rose-200 text-sm">
+                          <p className="font-bold text-rose-900 border-b border-rose-200 pb-1 mb-2 flex items-center gap-1"><IconAlertTriangle size={14}/> Romero Sanchez</p>
+                          <ul className="list-disc pl-4 text-rose-800 text-xs space-y-1">
+                            <li>Nota de Cuaderno crítica.</li>
+                            <li>Examen final aceptable (3.0).</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-emerald-50 p-5 rounded-lg border border-emerald-100">
+                      <SectionHeader number="8" title="Recomendaciones para Mejorar" colorClass="bg-emerald-700" textClass="text-emerald-900"/>
+                      <div className="space-y-4 mt-4">
+                        <div className="flex gap-3 bg-white p-3 rounded shadow-sm border border-emerald-50">
+                          <div className="w-8 h-8 rounded bg-emerald-100 flex items-center justify-center text-emerald-800 font-black shrink-0">1</div>
+                          <p className="text-sm text-emerald-900"><strong>PREPARACIÓN PARA EXÁMENES:</strong> Reforzar técnicas de estudio antes de exámenes de alto peso.</p>
+                        </div>
+                        <div className="flex gap-3 bg-white p-3 rounded shadow-sm border border-emerald-50">
+                          <div className="w-8 h-8 rounded bg-emerald-100 flex items-center justify-center text-emerald-800 font-black shrink-0">2</div>
+                          <p className="text-sm text-emerald-900"><strong>COMPLETITUD DE ACTIVIDADES:</strong> Asegurar la entrega a tiempo y calidad de actividades del libro.</p>
+                        </div>
+                        <div className="flex gap-3 bg-white p-3 rounded shadow-sm border border-emerald-50">
+                          <div className="w-8 h-8 rounded bg-emerald-100 flex items-center justify-center text-emerald-800 font-black shrink-0">3</div>
+                          <p className="text-sm text-emerald-900"><strong>REVISIÓN DE CUADERNOS:</strong> Incentivar la organización y tomas de apuntes.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="bg-white p-6 rounded-xl shadow-sm border border-purple-100">
+                  <SectionHeader number="9" title={<><IconCalculator size={20}/> Efectividad de Exámenes (Promedio Combinado)</>} colorClass="bg-purple-700" textClass="text-purple-900"/>
+                  <div className="flex flex-col md:flex-row items-center gap-6 mt-6 bg-purple-50 p-6 rounded-lg border border-purple-100">
+                    <div className="w-32 h-32 rounded-full border-8 border-purple-300 flex items-center justify-center bg-white shadow-inner">
+                      <div className="text-center">
+                        <span className="text-3xl font-black text-purple-800">{combinedExamAvg}</span>
+                        <p className="text-[10px] font-bold text-purple-600 uppercase">Promedio</p>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-purple-900 mb-2">Análisis de la Métrica Combinada</h3>
+                      <p className="text-sm text-purple-800 leading-relaxed mb-4">
+                        El cálculo combinado de <strong>Exámenes (Intermedio + Final) y Quizzes</strong> nos da un promedio grupal de <strong>{combinedExamAvg}</strong> sobre 5.0. 
+                        Esta métrica evalúa el nivel de retención de conocimientos teóricos y gramaticales bajo presión.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="bg-white px-3 py-1 rounded-full text-xs font-bold text-purple-700 border border-purple-200">Examen Intermedio: {classAverages.intermedio}</span>
+                        <span className="bg-white px-3 py-1 rounded-full text-xs font-bold text-purple-700 border border-purple-200">Examen Final: {classAverages.final}</span>
+                        <span className="bg-white px-3 py-1 rounded-full text-xs font-bold text-purple-700 border border-purple-200">Quizzes: {classAverages.quiz}</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* --- SECCIÓN 10: INTEGRACIÓN GLOBAL DE IA --- */}
+                <section className="bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-xl shadow-md border-t-4 border-blue-600">
+                  <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-4">
+                    <div>
+                      <SectionHeader number="10" title={<><IconBrainCircuit size={20}/> Análisis Estratégico Global con IA</>} colorClass="bg-blue-700" textClass="text-blue-900" />
+                      <p className="text-sm text-blue-800 mt-1 ml-8">Obtén un diagnóstico de toda la clase y sugerencias metodológicas impulsadas por Gemini.</p>
+                    </div>
+                    <button 
+                      onClick={handleGenerateGlobalAnalysis} 
+                      disabled={isGeneratingGlobal} 
+                      className={`flex items-center gap-2 px-5 py-3 rounded-lg font-bold text-white shadow-lg transition-all ${isGeneratingGlobal ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-700 hover:bg-blue-800 hover:shadow-xl active:scale-95'}`}
+                    >
+                      {isGeneratingGlobal ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Procesando Clase...
+                        </>
+                      ) : '✨ Analizar Clase Completa'}
+                    </button>
+                  </div>
+                  
+                  {globalError && <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mt-4 rounded text-sm font-medium">{globalError}</div>}
+                  
+                  {aiGlobalAnalysis && (
+                    <div className="bg-white rounded-lg p-6 border border-blue-200 shadow-sm animate-fade-in mt-4">
+                      <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-3">Diagnóstico y Recomendaciones (Gemini IA)</p>
+                      <div className="text-gray-800 text-sm space-y-3 leading-relaxed whitespace-pre-wrap font-medium">
+                        {aiGlobalAnalysis}
+                      </div>
+                    </div>
+                  )}
+                </section>
+
+              </div>
+
+              {/* --- VENTANA SUPERPUESTA (MODAL) DEL ESTUDIANTE --- */}
+              {isModalOpen && selectedStudent && (
+                <div 
+                  className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-8 animate-fade-in"
+                  onClick={handleCloseModal}
+                >
+                  <div 
+                    className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden relative"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    
+                    {/* Cabecera del Modal */}
+                    <div className="bg-red-800 text-white p-6 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0 relative">
+                      <button 
+                        onClick={handleCloseModal} 
+                        className="absolute top-4 right-4 text-red-200 hover:text-white transition-colors bg-red-900/50 hover:bg-red-900 rounded-full p-2"
+                        title="Cerrar ventana"
+                      >
+                        <IconX size={24} />
+                      </button>
+
+                      <div>
+                        <h3 className="text-xl md:text-2xl font-bold pr-10">{selectedStudent.name}</h3>
+                        <p className="text-red-200 opacity-90 text-sm flex items-center gap-1 mt-1">
+                          <IconTrophy size={14}/> Posición: #{[...studentData].sort((a,b)=>b.promedio-a.promedio).findIndex(s => s.id === selectedStudent.id) + 1} de {studentData.length}
+                        </p>
+                      </div>
+                      <div className="bg-white text-red-800 px-6 py-2 rounded-full shadow-inner text-center md:mr-12">
+                        <p className="text-xs font-bold uppercase tracking-wide">Promedio Final</p>
+                        <p className="text-2xl font-black leading-none">{selectedStudent.promedio.toFixed(2)}</p>
+                      </div>
+                    </div>
+
+                    {/* Cuerpo Scrolleable del Modal */}
+                    <div className="overflow-y-auto flex-1 bg-white">
+                      <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                          <h4 className="font-bold text-gray-700 mb-4 flex items-center gap-2"><IconBarChart2 size={18}/> Desglose de Notas</h4>
+                          <div className="space-y-4">
+                            {[
+                              { label: 'Disciplina (10%)', val: selectedStudent.disciplina, avg: classAverages.disciplina },
+                              { label: 'Quiz (9%)', val: selectedStudent.quiz, avg: classAverages.quiz },
+                              { label: 'Ex. Intermedio (20%)', val: selectedStudent.intermedio, avg: classAverages.intermedio },
+                              { label: 'Ex. Final (20%)', val: selectedStudent.final, avg: classAverages.final },
+                              { label: 'Cuaderno (14%)', val: selectedStudent.cuaderno, avg: classAverages.cuaderno },
+                            ].map((item, idx) => (
+                              <div key={idx} className="relative pt-1">
+                                <div className="flex mb-1 items-center justify-between">
+                                  <span className="text-xs font-semibold inline-block text-gray-600 uppercase">{item.label}</span>
+                                  <span className={`text-xs font-bold inline-block`} style={{ color: getColorByValue(item.val) }}>
+                                    {item.val.toFixed(1)} <span className="text-gray-400 font-normal">/ 5.0</span>
+                                  </span>
+                                </div>
+                                <div className="overflow-hidden h-2 mb-1 text-xs flex rounded bg-gray-200">
+                                  <div style={{ width: `${(item.val / 5) * 100}%`, backgroundColor: getColorByValue(item.val) }} className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500`}></div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-6">
+                          <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <h4 className="font-bold text-gray-700 mb-3 text-sm">Detalle Unidades (Libro)</h4>
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div className="bg-white p-2 rounded border border-gray-200 shadow-sm">
+                                <p className="text-xs text-gray-500 font-bold mb-1">Unit 0</p>
+                                <p className="font-bold" style={{ color: getColorByValue(selectedStudent.u0) }}>{selectedStudent.u0.toFixed(1)}</p>
+                              </div>
+                              <div className="bg-white p-2 rounded border border-gray-200 shadow-sm">
+                                <p className="text-xs text-gray-500 font-bold mb-1">Unit 1</p>
+                                <p className="font-bold" style={{ color: getColorByValue(selectedStudent.u1) }}>{selectedStudent.u1.toFixed(1)}</p>
+                              </div>
+                              <div className="bg-white p-2 rounded border border-gray-200 shadow-sm">
+                                <p className="text-xs text-gray-500 font-bold mb-1">Unit 2</p>
+                                <p className="font-bold" style={{ color: getColorByValue(selectedStudent.u2) }}>{selectedStudent.u2.toFixed(1)}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* NUEVO: TABLA COMPARATIVA DE BRECHAS */}
+                          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+                            <div className="bg-gray-50 p-3 rounded-t-lg border-b border-gray-200">
+                                <h4 className="font-bold text-gray-700 text-sm flex items-center gap-2">
+                                  <IconTrendingUp size={16} className="text-blue-500" />
+                                  Comparativa Numérica Detallada
+                                </h4>
+                            </div>
+                            <div className="overflow-hidden rounded-b-lg">
+                              <table className="w-full text-xs text-left bg-white">
+                                <thead className="bg-white text-gray-500 border-b border-gray-100">
+                                  <tr>
+                                    <th className="py-2 px-3 font-semibold">Criterio</th>
+                                    <th className="py-2 px-3 font-semibold text-center">Estudiante</th>
+                                    <th className="py-2 px-3 font-semibold text-center">Curso</th>
+                                    <th className="py-2 px-3 font-semibold text-center">Brecha</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                  {[
+                                    { label: 'Disciplina', val: selectedStudent.disciplina, avg: parseFloat(classAverages.disciplina) },
+                                    { label: 'Quiz', val: selectedStudent.quiz, avg: parseFloat(classAverages.quiz) },
+                                    { label: 'Exámenes', val: (selectedStudent.intermedio + selectedStudent.final) / 2, avg: parseFloat(classAverages.examenes) },
+                                    { label: 'Unidades', val: (selectedStudent.u0 + selectedStudent.u1 + selectedStudent.u2) / 3, avg: parseFloat(classAverages.units) },
+                                    { label: 'Cuaderno', val: selectedStudent.cuaderno, avg: parseFloat(classAverages.cuaderno) },
+                                  ].map((row, idx) => {
+                                    const diff = (row.val - row.avg).toFixed(1);
+                                    const isPositive = diff > 0;
+                                    const isNeutral = diff == 0;
+                                    return (
+                                      <tr key={idx} className="hover:bg-blue-50/50 transition-colors">
+                                        <td className="py-2 px-3 font-medium text-gray-700">{row.label}</td>
+                                        <td className="py-2 px-3 text-center font-bold" style={{ color: getColorByValue(row.val) }}>{row.val.toFixed(1)}</td>
+                                        <td className="py-2 px-3 text-center font-medium text-gray-400">{row.avg.toFixed(1)}</td>
+                                        <td className="py-2 px-3 text-center font-bold">
+                                          <span className={`px-2 py-0.5 rounded-full text-[10px] ${isPositive ? 'bg-green-100 text-green-700' : isNeutral ? 'bg-gray-100 text-gray-500' : 'bg-red-100 text-red-700'}`}>
+                                            {isPositive ? '+' : ''}{diff}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+
+                      {/* GRÁFICO COMPARATIVO ESTUDIANTE VS CURSO (RADAR) */}
+                      <div className="bg-white p-6 md:px-8 md:py-6 border-t border-gray-200">
+                        <h4 className="font-bold text-gray-700 mb-4 flex items-center gap-2"><IconTarget size={18}/> Huella de Rendimiento Radial</h4>
+                        <div className="flex gap-6 mb-4 justify-center text-sm font-medium">
+                          <span className="flex items-center gap-2"><span className="w-4 h-4 bg-blue-600/30 border-2 border-blue-600 rounded"></span> {selectedStudent.name.split(' ')[0]}</span>
+                          <span className="flex items-center gap-2"><span className="w-4 h-4 bg-gray-400/20 border-2 border-dashed border-gray-400 rounded"></span> Promedio Curso</span>
+                        </div>
+                        <div className="w-full overflow-x-auto flex justify-center">
+                          {(() => {
+                            // Se aumentó el tamaño del viewBox y el radio para dar holgura a los textos
+                            const size = 500;
+                            const cx = size / 2;
+                            const cy = size / 2;
+                            const radius = size * 0.35; // 175
+                            const maxV = 5.0;
+                            
+                            const labels = ['Disciplina', 'Quiz', 'Exámenes', 'Unidades', 'Cuaderno'];
+                            const studentVals = [
+                              selectedStudent.disciplina,
+                              selectedStudent.quiz,
+                              (selectedStudent.intermedio + selectedStudent.final) / 2,
+                              (selectedStudent.u0 + selectedStudent.u1 + selectedStudent.u2) / 3,
+                              selectedStudent.cuaderno
+                            ];
+                            const avgVals = [
+                              parseFloat(classAverages.disciplina),
+                              parseFloat(classAverages.quiz),
+                              parseFloat(classAverages.examenes),
+                              parseFloat(classAverages.units),
+                              parseFloat(classAverages.cuaderno)
+                            ];
+
+                            // Funciones matemáticas para el Radar
+                            const getPoint = (val, i, total) => {
+                              const angle = (Math.PI * 2 * i / total) - (Math.PI / 2);
+                              const r = (val / maxV) * radius;
+                              return {
+                                x: cx + r * Math.cos(angle),
+                                y: cy + r * Math.sin(angle),
+                                angle: angle,
+                                val: val.toFixed(1)
+                              };
+                            };
+
+                            const createPolygon = (pts) => `M ${pts.map(p => `${p.x},${p.y}`).join(' L ')} Z`;
+
+                            const studentPoints = studentVals.map((v, i) => getPoint(v, i, labels.length));
+                            const avgPoints = avgVals.map((v, i) => getPoint(v, i, labels.length));
+                            
+                            // Niveles del grid base
+                            const levels = [1, 2, 3, 4, 5];
+
+                            return (
+                              <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-auto max-w-md font-sans overflow-visible">
+                                
+                                {/* 1. Dibuja los polígonos concéntricos de fondo (Grid) */}
+                                {levels.map(level => {
+                                  const levelPts = labels.map((_, i) => getPoint(level, i, labels.length));
+                                  return (
+                                    <g key={`grid-level-${level}`}>
+                                      <path d={createPolygon(levelPts)} fill="none" stroke="#e5e7eb" strokeWidth="1" />
+                                      {/* Etiqueta del nivel en el eje superior (solo un lado para no saturar) */}
+                                      <text x={cx} y={cy - ((level/maxV) * radius) - 4} fontSize="10" fill="#9ca3af" textAnchor="end" className="select-none">{level}.0</text>
+                                    </g>
+                                  );
+                                })}
+
+                                {/* 2. Dibuja los radios (ejes) que van del centro hacia afuera */}
+                                {labels.map((lbl, i) => {
+                                  const endPt = getPoint(5, i, labels.length);
+                                  const labelOffset = 30; // Distancia extra para separar el texto y evitar recortes
+                                  const labelR = radius + labelOffset;
+                                  const lx = cx + labelR * Math.cos(endPt.angle);
+                                  const ly = cy + labelR * Math.sin(endPt.angle);
+                                  
+                                  // Determinar alineación de texto según el ángulo
+                                  const cos = Math.cos(endPt.angle);
+                                  let anchor = 'middle';
+                                  if (Math.abs(cos) > 0.1) {
+                                    anchor = cos > 0 ? 'start' : 'end';
+                                  }
+
+                                  return (
+                                    <g key={`axis-${i}`}>
+                                      <line x1={cx} y1={cy} x2={endPt.x} y2={endPt.y} stroke="#e5e7eb" strokeWidth="1.5" />
+                                      <text x={lx} y={ly + 4} fontSize="12" fill="#4b5563" fontWeight="bold" textAnchor={anchor} className="select-none">
+                                        {lbl}
+                                      </text>
+                                    </g>
+                                  );
+                                })}
+
+                                {/* 3. Dibuja el Área de Promedio del Curso */}
+                                <path 
+                                  d={createPolygon(avgPoints)} 
+                                  fill="rgba(156, 163, 175, 0.15)" 
+                                  stroke="#9ca3af" 
+                                  strokeWidth="2" 
+                                  strokeDasharray="6 4" 
+                                />
+
+                                {/* 4. Dibuja el Área del Estudiante */}
+                                <path 
+                                  d={createPolygon(studentPoints)} 
+                                  fill="rgba(37, 99, 235, 0.25)" 
+                                  stroke="#2563eb" 
+                                  strokeWidth="3" 
+                                  strokeLinejoin="round" 
+                                />
+
+                                {/* 5. Dibuja los Puntos y Valores del Estudiante por encima de todo */}
+                                {studentPoints.map((p, i) => (
+                                  <g key={`sp-${i}`}>
+                                    <circle cx={p.x} cy={p.y} r="5" fill="#2563eb" stroke="#ffffff" strokeWidth="2"/>
+                                    {/* Fondo de la nota */}
+                                    <rect x={p.x - 14} y={p.y - 22} width="28" height="14" rx="4" fill="#2563eb" className="opacity-90" />
+                                    {/* Texto de la nota */}
+                                    <text x={p.x} y={p.y - 12} fontSize="10" fill="#ffffff" textAnchor="middle" fontWeight="bold">{p.val}</text>
+                                  </g>
+                                ))}
+                                
+                                {/* Puntos discretos del promedio general */}
+                                {avgPoints.map((p, i) => (
+                                  <circle key={`ap-${i}`} cx={p.x} cy={p.y} r="4" fill="#ffffff" stroke="#9ca3af" strokeWidth="2" />
+                                ))}
+                                
+                              </svg>
+                            );
+                          })()}
+                        </div>
+
+                        {/* NUEVO: INTERPRETACIÓN DE DATOS (SIN STORYTELLING) */}
+                        {(() => {
+                            const fullName = selectedStudent.name;
+                            const criteria = [
+                              { name: 'Disciplina', val: selectedStudent.disciplina, avg: parseFloat(classAverages.disciplina) },
+                              { name: 'Quizzes', val: selectedStudent.quiz, avg: parseFloat(classAverages.quiz) },
+                              { name: 'Exámenes', val: (selectedStudent.intermedio + selectedStudent.final) / 2, avg: parseFloat(classAverages.examenes) },
+                              { name: 'Unidades del Libro', val: (selectedStudent.u0 + selectedStudent.u1 + selectedStudent.u2) / 3, avg: parseFloat(classAverages.units) },
+                              { name: 'Cuaderno', val: selectedStudent.cuaderno, avg: parseFloat(classAverages.cuaderno) }
+                            ];
+                            
+                            // Ordenamos para encontrar el valor máximo y mínimo
+                            criteria.sort((a, b) => b.val - a.val);
+                            const strongest = criteria[0];
+                            const weakest = criteria[criteria.length - 1];
+
+                            // Cálculos de la brecha respecto al grupo
+                            const diffStrong = (strongest.val - strongest.avg).toFixed(1);
+                            const diffWeak = (weakest.val - weakest.avg).toFixed(1);
+                            const strongText = diffStrong >= 0 ? `(+${diffStrong} sobre el promedio grupal)` : `(${diffStrong} bajo el promedio grupal)`;
+                            const weakText = diffWeak >= 0 ? `(+${diffWeak} sobre el promedio grupal)` : `(${diffWeak} bajo el promedio grupal)`;
+
+                            return (
+                                <div className="mt-8 bg-slate-50 p-6 rounded-xl border border-slate-200 relative overflow-hidden">
+                                    <h5 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                        <IconBarChart2 size={16} className="text-slate-600"/> 
+                                        Interpretación de Datos
+                                    </h5>
+                                    <div className="text-sm text-slate-700 leading-relaxed space-y-3 relative z-10">
+                                        <p>
+                                            El gráfico radial describe numéricamente la distribución de las calificaciones de <strong>{fullName}</strong>. 
+                                            El valor máximo en su rendimiento corresponde a <strong>{strongest.name}</strong> con una nota de <strong>{strongest.val.toFixed(1)}</strong> {strongText}. 
+                                            En el extremo opuesto, el valor mínimo se registra en <strong>{weakest.name}</strong> con una nota de <strong>{weakest.val.toFixed(1)}</strong> {weakText}.
+                                        </p>
+                                        <p className="font-medium text-slate-800 mt-4 border-l-2 border-slate-400 pl-3 bg-slate-100/50 py-2 rounded-r">
+                                            Análisis general: Con un promedio final de {selectedStudent.promedio.toFixed(2)}, los datos indican un desempeño {
+                                                selectedStudent.promedio >= 4.0 
+                                                ? 'Alto/Superior. Las variables analizadas superan la media del curso en su mayoría, evidenciando consistencia en los criterios de evaluación.' 
+                                                : selectedStudent.promedio >= 3.0 
+                                                ? 'Básico. El estudiante cumple con los requisitos de aprobación, pero se identifica una desviación negativa importante en sus métricas más bajas que requiere nivelación.' 
+                                                : 'Bajo. Las métricas graficadas presentan una contracción generalizada respecto al promedio del grupo, confirmando deficiencias en múltiples criterios de evaluación.'
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                      </div>
+
+                      {/* INTEGRACIÓN IA: Herramientas del Estudiante */}
+                      <div className="bg-slate-50 p-6 md:p-8 border-t border-slate-200 mt-auto">
+                        <div className="mb-4">
+                          <h4 className="font-bold text-slate-800 flex items-center gap-2 text-lg">
+                            <IconSparkles size={20} className="text-blue-500" /> Herramientas de IA para el Docente
+                          </h4>
+                          <p className="text-sm text-slate-600 mt-1">Utiliza Gemini para agilizar tu flujo de trabajo con {selectedStudent.name.split(' ')[0]}.</p>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-3">
+                          <button onClick={handleGenerateAIPlan} disabled={isGeneratingPlan || isGeneratingEmail || isGeneratingObs} className={`flex items-center gap-2 px-4 py-2 rounded font-bold shadow-sm transition-all text-sm ${isGeneratingPlan ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-blue-600'}`}>
+                            {isGeneratingPlan ? 'Generando...' : '✨ Plan de Acción'}
+                          </button>
+                          
+                          <button onClick={handleGenerateParentEmail} disabled={isGeneratingPlan || isGeneratingEmail || isGeneratingObs} className={`flex items-center gap-2 px-4 py-2 rounded font-bold shadow-sm transition-all text-sm ${isGeneratingEmail ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-emerald-600'}`}>
+                            {isGeneratingEmail ? 'Redactando...' : <><IconMail size={16}/> ✨ Correo a Padres</>}
+                          </button>
+
+                          <button onClick={handleGenerateObservation} disabled={isGeneratingPlan || isGeneratingEmail || isGeneratingObs} className={`flex items-center gap-2 px-4 py-2 rounded font-bold shadow-sm transition-all text-sm ${isGeneratingObs ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-purple-600'}`}>
+                            {isGeneratingObs ? 'Redactando...' : <><IconClipboard size={16}/> ✨ Observador Estudiantil</>}
+                          </button>
+                        </div>
+
+                        {planError && <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mt-4 rounded text-sm font-medium">{planError}</div>}
+                        
+                        {/* Resultados Plan */}
+                        {aiPlan && (
+                          <div className="bg-white rounded-lg p-5 border border-blue-200 shadow-sm animate-fade-in mt-4">
+                            <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-3">Plan de Acción Pedagógico (IA)</p>
+                            <div className="text-gray-800 text-sm space-y-3 leading-relaxed whitespace-pre-wrap font-medium">{aiPlan}</div>
+                          </div>
+                        )}
+
+                        {/* Resultados Correo */}
+                        {aiEmail && (
+                          <div className="bg-white rounded-lg p-5 border border-emerald-200 shadow-sm animate-fade-in mt-4">
+                            <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3 flex items-center gap-2"><IconMail size={14}/> Borrador de Correo para Padres (IA)</p>
+                            <div className="text-gray-800 text-sm space-y-3 leading-relaxed whitespace-pre-wrap font-medium bg-emerald-50 p-4 rounded border border-emerald-100 italic">
+                              {aiEmail}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Resultados Observador */}
+                        {aiObs && (
+                          <div className="bg-white rounded-lg p-5 border border-purple-200 shadow-sm animate-fade-in mt-4">
+                            <p className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-3 flex items-center gap-2"><IconClipboard size={14}/> Nota para el Observador (IA)</p>
+                            <div className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap font-medium bg-purple-50 p-4 rounded border border-purple-100 border-l-4">
+                              {aiObs}
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-2 text-right">Nota corta de máximo 50 palabras.</p>
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* --- NUEVA VENTANA SUPERPUESTA (MODAL) DE LISTADO DE ESTUDIANTES --- */}
+              {isListModalOpen && (
+                <div 
+                  className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-8 animate-fade-in"
+                  onClick={() => setIsListModalOpen(false)}
+                >
+                  <div 
+                    className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden relative"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Cabecera del Listado */}
+                    <div className="bg-blue-800 text-white p-5 md:p-6 flex justify-between items-center shrink-0">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-white/20 p-2 rounded-full hidden sm:block">
+                          <IconUsers size={24} className="text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl md:text-2xl font-bold">Directorio de Estudiantes</h3>
+                          <p className="text-blue-200 text-sm font-medium mt-0.5">Orden alfabético (A-Z)</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setIsListModalOpen(false)} 
+                        className="text-blue-200 hover:text-white transition-colors bg-blue-900/50 hover:bg-blue-900 rounded-full p-2"
+                        title="Cerrar listado"
+                      >
+                        <IconX size={24} />
+                      </button>
+                    </div>
+
+                    {/* Cuerpo Scrolleable con la Tabla */}
+                    <div className="overflow-y-auto flex-1 bg-gray-50 p-4 md:p-6">
+                      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <table className="w-full text-sm text-left">
+                          <thead className="bg-gray-100 text-gray-600 border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+                            <tr>
+                              <th className="py-3 px-4 font-bold w-12 text-center">#</th>
+                              <th className="py-3 px-4 font-bold">Apellidos y Nombres</th>
+                              <th className="py-3 px-4 font-bold text-center w-32">Promedio Final</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {sortedAllStudents.map((s, idx) => (
+                              <tr 
+                                key={s.id} 
+                                onClick={() => {
+                                  // Cerramos este modal de lista y abrimos el individual
+                                  setIsListModalOpen(false);
+                                  selectStudentAndOpenModal(s.id, s.name);
+                                }}
+                                className="hover:bg-blue-50 cursor-pointer transition-colors group"
+                                title="Haga clic para ver el análisis individual"
+                              >
+                                <td className="py-3 px-4 text-center font-medium text-gray-400 group-hover:text-blue-500">{idx + 1}</td>
+                                <td className="py-3 px-4 font-semibold text-gray-800 group-hover:text-blue-800">{s.name}</td>
+                                <td className="py-3 px-4 text-center">
+                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${s.promedio >= 4 ? 'bg-green-100 text-green-700' : s.promedio >= 3 ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
+                                    {s.promedio.toFixed(2)}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="text-center text-xs text-gray-400 mt-4">Haga clic en un estudiante para acceder a su perfil detallado e informe de IA.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
